@@ -177,7 +177,7 @@ export default function Composer({ conversationId, socket, connected, onSent, re
           type="button"
           aria-label={voice.recording ? 'Stop recording' : 'Record a voice message'}
           onClick={() => (voice.recording ? voice.stop() : voice.start())}
-          disabled={uploading || sending}
+          disabled={uploading || sending || voice.starting}
         >
           {voice.recording ? <Square size={18} fill="currentColor" /> : <Mic size={20} />}
         </button>

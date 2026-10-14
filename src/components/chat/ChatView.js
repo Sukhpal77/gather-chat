@@ -1,11 +1,12 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, Search, Info, Pin, Archive, X, Hash } from 'lucide-react';
 import Avatar from '@/components/ui/Avatar';
 import EmptyState from '@/components/ui/EmptyState';
 import MessageBubble from './MessageBubble';
 import Composer from './Composer';
 import { dayLabel } from '@/lib/format';
+import { useChatScroll } from '@/hooks/useChatScroll';
 
 export default function ChatView({
   conversation,
@@ -19,13 +20,7 @@ export default function ChatView({
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const end = useRef(null);
-  const lastCount = useRef(0);
-  useEffect(() => {
-    if (messagesState.messages.length >= lastCount.current)
-      end.current?.scrollIntoView({ behavior: 'smooth' });
-    lastCount.current = messagesState.messages.length;
-  }, [messagesState.messages]);
+  const { scrollRef, onScroll } = useChatScroll(messagesState.messages, user.id);
   if (!conversation)
     return (
       <section className="chat-view welcome-view">
@@ -141,10 +136,20 @@ export default function ChatView({
           </button>
         </label>
       )}
-      <div className="message-scroll" aria-label="Conversation messages" aria-live="polite">
+      <div
+        ref={scrollRef}
+        onScroll={onScroll}
+        className="message-scroll"
+        aria-label="Conversation messages"
+        aria-live="polite"
+      >
         {messagesState.hasMore && (
-          <button className="load-older" onClick={messagesState.loadOlder}>
-            Load earlier messages
+          <button
+            className="load-older"
+            disabled={messagesState.loadingOlder}
+            onClick={messagesState.loadOlder}
+          >
+            {messagesState.loadingOlder ? 'Loading earlier messages…' : 'Load earlier messages'}
           </button>
         )}
         {messagesState.loading ? (
@@ -187,7 +192,6 @@ export default function ChatView({
             typing…
           </div>
         )}
-        <div ref={end} />
       </div>
       <Composer
         key={conversation.id}

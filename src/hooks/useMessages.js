@@ -6,12 +6,14 @@ export function useMessages(selectedId, reportError) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const olderRequest = useRef(false);
   const selected = useRef(selectedId);
   selected.current = selectedId;
   const generation = useRef(0);
   const markRead = useCallback(
     async (id, messageId) => {
-      if (!messageId) return;
+      if (!messageId || selected.current !== id || document.visibilityState !== 'visible') return;
       try {
         await api(`/conversations/${id}/read`, { method: 'POST', body: { messageId } });
       } catch (error) {
@@ -31,9 +33,25 @@ export function useMessages(selectedId, reportError) {
       const data = await api(`/conversations/${selectedId}/messages`);
       if (version !== generation.current || selected.current !== selectedId) return;
       setMessages((previous) => {
-        const merged = new Map(
-          [...data.messages, ...previous].map((message) => [message.id, message]),
-        );
+        // Keep messages received while this fetch was running, but discard the
+        // old page on reconnect. Retaining a distant page can hide a missing gap.
+        const oldest = data.messages[0];
+        const retained = oldest
+          ? previous.filter(
+              (message) =>
+                new Date(message.createdAt) > new Date(oldest.createdAt) ||
+                (new Date(message.createdAt).getTime() === new Date(oldest.createdAt).getTime() &&
+                  message.id >= oldest.id),
+            )
+          : [];
+        const merged = new Map(retained.map((message) => [message.id, message]));
+        for (const message of data.messages) {
+          const existing = merged.get(message.id);
+          merged.set(message.id, {
+            ...message,
+            readBy: [...new Set([...message.readBy, ...(existing?.readBy || [])])],
+          });
+        }
         return [...merged.values()].sort(
           (a, b) => new Date(a.createdAt) - new Date(b.createdAt) || a.id.localeCompare(b.id),
         );
@@ -49,22 +67,39 @@ export function useMessages(selectedId, reportError) {
   useEffect(() => {
     setMessages([]);
     setHasMore(false);
+    olderRequest.current = false;
+    setLoadingOlder(false);
     reload();
     return () => {
       generation.current++;
     };
   }, [reload]);
   async function loadOlder() {
-    if (!messages.length) return;
+    if (!messages.length || olderRequest.current || !hasMore) return;
+    olderRequest.current = true;
+    setLoadingOlder(true);
     const id = selectedId;
+    const version = generation.current;
     try {
       const data = await api(`/conversations/${id}/messages?before=${messages[0].id}`);
-      if (selected.current === id) {
-        setMessages((previous) => [...data.messages, ...previous]);
+      if (selected.current === id && generation.current === version) {
+        setMessages((previous) => {
+          const merged = new Map(
+            [...data.messages, ...previous].map((message) => [message.id, message]),
+          );
+          return [...merged.values()].sort(
+            (a, b) => new Date(a.createdAt) - new Date(b.createdAt) || a.id.localeCompare(b.id),
+          );
+        });
         setHasMore(data.hasMore);
       }
     } catch (error) {
       reportError(error.message);
+    } finally {
+      if (generation.current === version) {
+        olderRequest.current = false;
+        setLoadingOlder(false);
+      }
     }
   }
   const receive = useCallback(
@@ -97,5 +132,5 @@ export function useMessages(selectedId, reportError) {
     document.addEventListener('visibilitychange', visible);
     return () => document.removeEventListener('visibilitychange', visible);
   }, [selectedId, messages, markRead]);
-  return { messages, loading, hasMore, loadOlder, receive, read, reload };
+  return { messages, loading, hasMore, loadingOlder, loadOlder, receive, read, reload };
 }

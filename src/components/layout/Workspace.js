@@ -31,7 +31,8 @@ export default function Workspace({ user, onUpdated, onLogout, onPasswordChanged
   const directory = useDirectory(user, reportError);
   const groupInvitations = useGroupInvitations(reportError);
   const active = directory.conversations.find((c) => c.id === selectedId);
-  const messageState = useMessages(selectedId, reportError);
+  const chatPage = view === 'messages' || view === 'archive';
+  const messageState = useMessages(chatPage ? selectedId : null, reportError);
   const safeRefresh = useCallback(
     () => directory.refreshConversations().catch((error) => reportError(error.message)),
     [directory.refreshConversations, reportError],
@@ -153,7 +154,6 @@ export default function Workspace({ user, onUpdated, onLogout, onPasswordChanged
       setConfirmBusy(false);
     }
   }
-  const chatPage = view === 'messages' || view === 'archive';
   return (
     <main
       className={`workspace ${selectedId && chatPage ? 'mobile-chat-open' : ''}`}

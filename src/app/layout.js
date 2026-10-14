@@ -11,6 +11,12 @@ export const metadata = {
   description:
     'Bring your conversations together. Private messages, shared circles, and a little more connection.',
 };
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content',
+};
 export default function RootLayout({ children }) {
   return (
     <html lang="en">

@@ -1,5 +1,7 @@
 # Gather
 
+See the [application and mobile support review](docs/APP_REVIEW.md) for verified features, corrected chat issues, mobile testing limits, production setup, and suggested next features.
+
 A complete chat application in **one Next.js project**. Frontend pages, API routes, and authenticated Socket.IO connections share port 3000. MongoDB stores accounts, sessions, friendships, conversations, messages, and uploaded files. Express, Sequelize, and PostgreSQL are no longer runtime dependencies.
 
 ## Step 1 — Run with Docker
