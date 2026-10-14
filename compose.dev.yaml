@@ -1,0 +1,6 @@
+# Start only MongoDB for local development:
+# docker compose -f compose.yaml -f compose.dev.yaml up -d mongo
+services:
+  mongo:
+    ports:
+      - '127.0.0.1:27017:27017'

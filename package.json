@@ -1,0 +1,35 @@
+{
+  "name": "gather-chat",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.mjs",
+    "build": "next build",
+    "start": "node server.mjs --production",
+    "test": "node --test tests/validation.test.mjs",
+    "test:integration": "node --test tests/integration.test.mjs",
+    "seed": "node scripts/seed.mjs",
+    "migrate": "node scripts/migrate.mjs",
+    "format": "prettier --write src scripts tests docs server.mjs playwright.config.mjs *.json *.yaml README.md",
+    "format:check": "prettier --check src scripts tests docs server.mjs playwright.config.mjs *.json *.yaml README.md",
+    "test:ui": "playwright test",
+    "test:seed": "node --test tests/seed.test.mjs"
+  },
+  "dependencies": {
+    "@next/env": "^16.4.0",
+    "bcryptjs": "^3.0.2",
+    "lucide-react": "^0.468.0",
+    "mongoose": "^8.19.1",
+    "next": "^16.0.0",
+    "nodemailer": "^10.1.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "prettier": "^3.9.10"
+  }
+}

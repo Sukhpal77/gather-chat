@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.env*
+!.env.example
+*.log
+test-results
+playwright-report
+tests
+data-export.json
+.docker-local
+chat-app
+chat-app-backend
+socket
+legacy
